@@ -1,135 +1,50 @@
-body {
-    margin: 0; padding: 0;
-    background-color: #121212;
-    font-family: 'Segoe UI', Tahoma, sans-serif;
-    display: flex; flex-direction: column;
-    justify-content: center; align-items: center;
-    min-height: 100vh; overflow: hidden;
-}
+/* --- OTTIMIZZAZIONE PER SMARTPHONE E TABLET --- */
+@media (max-width: 768px) {
+    /* Rimpicciolisce la barra dei controlli in alto per farla entrare nello schermo */
+    .control-bar {
+        top: 5px;
+        padding: 5px;
+        gap: 5px;
+        width: 95%;
+        justify-content: center;
+        flex-wrap: wrap; /* Se non entrano, i tasti vanno a capo da soli */
+    }
+    
+    .control-bar button {
+        padding: 6px 10px;
+        font-size: 11px; /* Testo più piccolo ed elegante sui telefoni */
+    }
 
-/* PAGINA DI AVVIO */
-#splash-screen {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: radial-gradient(circle, #2c3e50 0%, #000 100%);
-    z-index: 200000; display: flex; align-items: center; justify-content: center;
-    color: white; text-align: center;
-}
-.start-btn {
-    padding: 20px 50px; font-size: 24px; font-weight: bold;
-    background: #e74c3c; color: white; border: none; border-radius: 50px;
-    cursor: pointer; box-shadow: 0 0 20px rgba(231, 76, 60, 0.5);
-    transition: transform 0.2s;
-}
-.start-btn:hover { transform: scale(1.1); background: #c0392b; }
+    /* Regola lo spazio dell'album per non farlo toccare contro i bordi del telefono */
+    .container {
+        width: 100vw;
+        height: 80vh;
+        margin-top: 60px;
+    }
 
-/* BARRA CONTROLLI */
-.control-bar {
-    position: fixed; top: 15px; z-index: 100000;
-    display: flex; gap: 10px; padding: 10px;
-    background: rgba(0,0,0,0.6); border-radius: 30px; backdrop-filter: blur(10px);
-}
-.control-bar button {
-    padding: 8px 15px; color: white; border: none; border-radius: 20px;
-    background: #34495e; font-weight: bold; cursor: pointer;
-}
+    /* Rimpicciolisce i tasti rapidi (Cuore, Stampa, Scarica) sotto ogni foto */
+    .photo-overlay-controls {
+        bottom: 10px;
+        gap: 5px;
+        width: 90%;
+        justify-content: center;
+    }
 
-/* TASTI SULLA FOTO */
-.photo-overlay-controls {
-    position: absolute; bottom: 20px; left: 50%;
-    transform: translateX(-50%); display: flex; gap: 10px;
-    z-index: 100;
-}
-.photo-overlay-controls button {
-    background: rgba(0,0,0,0.7); color: white; border: 1px solid white;
-    padding: 10px 15px; border-radius: 10px; cursor: pointer; font-size: 14px;
-}
-.photo-overlay-controls button.active { background: #2980b9; border-color: #3498db; }
+    .photo-overlay-controls button {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
 
-/* MODIFICATO: Contenitore allargato al 96% dell'altezza dello schermo per foto giganti */
-.container {
-    width: 98vw;
-    height: 92vh;
-    margin-top: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #1a1a1a;
-}
-
-.flip-book {
-    width: 100%;
-    height: 100%;
-    box-shadow: 0 12px 45px rgba(0,0,0,0.8);
-}
-
-.page {
-    background-color: #fdfaf7;
-}
-
-/* ZOOM E CONTENUTI */
-.zoom-wrapper { width: 100%; height: 100%; position: relative; background: #000; display: flex; justify-content: center; align-items: center; }
-.zoomable-img { width: 100%; height: 100%; object-fit: contain; }
-
-/* MODIFICATO: Stile della copertina per centrare e adattare perfettamente la foto 20 */
-.page-cover { 
-    background-size: cover; 
-    background-position: center; 
-    background-repeat: no-repeat;
-}
-.page-content-overlay {
-    width: 100%; height: 100%; background: rgba(0,0,0,0.45);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; color: white;
-}
-
-/* FINESTRE POP-UP */
-.modal { display: none; position: fixed; z-index: 100005; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); }
-.modal-content { background: #2c3e50; color: white; margin: 10% auto; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; position: relative; }
-textarea { width: 100%; height: 150px; background: #34495e; color: white; border-radius: 5px; margin-top: 10px; padding: 10px; resize: none; box-sizing: border-box; }
-.modal-actions { display: flex; justify-content: space-between; margin-top: 10px; }
-.action-btn-download { background: #2ecc71; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; }
-.action-btn-clear { background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; }
-
-/* Centra tutti gli elementi all'interno del box dei crediti */
-.credits-box {
-    display: flex;
-    flex-direction: column;
-    align-items: center; /* Centra orizzontalmente i testi e i link */
-    text-align: center;  /* Centra le righe di testo */
-}
-
-//* --- OTTIMIZZAZIONE INCOLONNAMENTO INSTAGRAM --- */
-.instagram-box {
-    margin-top: 20px;
-    padding-top: 15px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    display: flex;
-    flex-direction: column;
-    align-items: center; /* Incolonna i pulsanti perfettamente al centro */
-    gap: 10px;          /* Distanza uniforme tra un pulsante e l'altro */
-    width: 100%;
-}
-
-.insta-link {
-    display: inline-block;
-    color: #fff;
-    text-decoration: none;
-    font-size: 1rem;
-    font-weight: 500;
-    padding: 10px 15px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    transition: all 0.2s ease;
-    text-align: center;   /* Centra il testo dentro il pulsante */
-    width: 85%;          /* Dimensione fissa ed elegante per tutti e tre */
-    max-width: 260px;     /* Impedisce che si allarghino troppo su schermi grandi */
-    box-sizing: border-box;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-/* Effetto sfumatura Instagram al passaggio del mouse */
-.insta-link:hover {
-    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-    box-shadow: 0 4px 12px rgba(220, 39, 67, 0.3);
-    transform: translateY(-1px);
-    border-color: transparent;
+    /* Ottimizza la pagina dei contatti finale sui display piccoli */
+    .credits-box {
+        max-width: 260px;
+        padding: 15px;
+    }
+    .credits-name {
+        font-size: 1.2rem !important;
+    }
+    .insta-link {
+        font-size: 0.9rem;
+        padding: 8px 10px;
+    }
 }
