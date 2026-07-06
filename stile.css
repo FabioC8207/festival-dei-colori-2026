@@ -1,50 +1,39 @@
 /* --- OTTIMIZZAZIONE PER SMARTPHONE E TABLET --- */
 @media (max-width: 768px) {
-    /* Rimpicciolisce la barra dei controlli in alto per farla entrare nello schermo */
-    .control-bar {
-        top: 5px;
-        padding: 5px;
-        gap: 5px;
-        width: 95%;
-        justify-content: center;
-        flex-wrap: wrap; /* Se non entrano, i tasti vanno a capo da soli */
-    }
-    
-    .control-bar button {
-        padding: 6px 10px;
-        font-size: 11px; /* Testo più piccolo ed elegante sui telefoni */
-    }
+    /* ... le regole che abbiamo messo prima rimangono ... */
 
-    /* Regola lo spazio dell'album per non farlo toccare contro i bordi del telefono */
+    /* Forza il contenitore dell'album a sfruttare tutta l'altezza e larghezza del Samsung */
     .container {
-        width: 100vw;
-        height: 80vh;
-        margin-top: 60px;
+        width: 100vw !important;
+        height: 85vh !important;
+        margin-top: 50px !important;
+        padding: 0 !important;
     }
 
-    /* Rimpicciolisce i tasti rapidi (Cuore, Stampa, Scarica) sotto ogni foto */
-    .photo-overlay-controls {
-        bottom: 10px;
-        gap: 5px;
-        width: 90%;
-        justify-content: center;
+    /* Costringe la libreria e le immagini a riempire la pagina al 100% */
+    .flip-book {
+        width: 100% !important;
+        height: 100% !important;
     }
 
-    .photo-overlay-controls button {
-        padding: 6px 10px;
-        font-size: 11px;
+    .page {
+        width: 100% !important;
+        height: 100% !important;
+        background-size: contain !important; /* Adatta la foto allo schermo senza tagliarla */
+        background-position: center !important;
     }
 
-    /* Ottimizza la pagina dei contatti finale sui display piccoli */
-    .credits-box {
-        max-width: 260px;
-        padding: 15px;
+    .zoom-wrapper {
+        width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
-    .credits-name {
-        font-size: 1.2rem !important;
-    }
-    .insta-link {
-        font-size: 0.9rem;
-        padding: 8px 10px;
+
+    .zoomable-img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important; /* Fa sì che la foto riempia lo schermo al massimo delle sue proporzioni */
     }
 }
