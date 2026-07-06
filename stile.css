@@ -1,25 +1,373 @@
-/* Disattiva l'effetto sfoglio su smartphone e mostra le foto in sequenza verticale fluida */
+/* ==========================================================================
+   1. STILE GENERALE E RESET
+   ========================================================================== */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #1a1a1a;
+    color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+h1, h2, h3 {
+    margin: 10px 0;
+}
+
+/* ==========================================================================
+   2. SCHERMATA DI AVVIO (SPLASH SCREEN)
+   ========================================================================== */
+#splash-screen {
+    position: fixed;
+    top: 0; 
+    left: 0; 
+    width: 100vw; 
+    height: 100vh;
+    background-color: #111111;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    text-align: center;
+}
+
+.splash-content {
+    padding: 20px;
+}
+
+.start-btn {
+    padding: 15px 35px;
+    font-size: 18px;
+    background-color: #ff4757;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+    transition: transform 0.2s;
+}
+
+.start-btn:hover {
+    transform: scale(1.05);
+}
+
+/* ==========================================================================
+   3. BARRA DEI CONTROLLI SUPERIORE (UI)
+   ========================================================================== */
+.control-bar {
+    position: fixed;
+    top: 15px;
+    display: flex;
+    gap: 10px;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px 20px;
+    border-radius: 30px;
+    backdrop-filter: blur(5px);
+}
+
+.control-bar button {
+    background: #333;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.2s;
+}
+
+.control-bar button:hover {
+    background: #444;
+}
+
+#zip-progress {
+    color: #ff4757;
+    font-weight: bold;
+}
+
+/* ==========================================================================
+   4. CONTENITORE ALBUM E SFOGLIO (DESKTOP)
+   ========================================================================== */
+.container {
+    margin-top: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 90vw;
+    height: 80vh;
+}
+
+.flip-book {
+    box-shadow: 0 12px 35px rgba(0,0,0,0.7);
+}
+
+.page {
+    background-color: #222;
+    overflow: hidden;
+    position: relative;
+}
+
+.zoom-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.zoomable-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background-color: #000;
+}
+
+/* ==========================================================================
+   5. CONTROLLI RAPIDI SOVRAPPOSTI ALLE FOTO
+   ========================================================================== */
+.photo-overlay-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    background: rgba(0,0,0,0.6);
+    padding: 8px 15px;
+    border-radius: 20px;
+    z-index: 10;
+}
+
+.photo-overlay-controls button {
+    background: #fff;
+    color: #333;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.photo-overlay-controls button.active {
+    background: #ff4757;
+    color: white;
+}
+
+/* ==========================================================================
+   6. FINESTRE POP-UP (MODAL LISTA STAMPA)
+   ========================================================================== */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 200;
+}
+
+.modal-content {
+    background: #222;
+    margin: 15% auto;
+    padding: 20px;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 10px;
+    position: relative;
+}
+
+.close-btn {
+    position: absolute;
+    right: 15px; top: 10px;
+    font-size: 24px; cursor: pointer;
+}
+
+textarea {
+    width: 100%; 
+    height: 150px;
+    background: #333; 
+    color: white;
+    border: 1px solid #444; 
+    padding: 10px;
+    box-sizing: border-box; 
+    resize: none;
+    border-radius: 5px;
+    font-family: monospace;
+}
+
+.modal-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.modal-actions button {
+    padding: 8px 15px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.action-btn-download { background-color: #2ed573; color: white; }
+.action-btn-clear { background-color: #ff4757; color: white; }
+
+/* ==========================================================================
+   7. COPERTINE E PAGINA CONTATTI (INCOLONNATI VIRTICALMENTE)
+   ========================================================================== */
+.page-cover {
+    background-size: cover;
+    background-position: center;
+}
+
+.page-content-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.bg-credits {
+    background-color: #151515;
+}
+
+.credits-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+    width: 100%;
+    max-width: 300px;
+    margin-top: 10px;
+}
+
+.credits-divider {
+    width: 60%;
+    border: 0;
+    height: 1px;
+    background: #444;
+    margin: 5px 0;
+}
+
+.credits-email {
+    color: #ff4757;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 8px 15px;
+    background: rgba(255, 71, 87, 0.1);
+    border-radius: 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.instagram-box {
+    display: flex;
+    flex-direction: column; 
+    align-items: center;
+    gap: 8px; 
+    width: 100%;
+    margin-top: 10px;
+}
+
+.social-title {
+    font-size: 14px;
+    opacity: 0.7;
+    margin-bottom: 4px;
+}
+
+.insta-link {
+    display: block;
+    color: #ffffff;
+    text-decoration: none;
+    background: #2b2b2b;
+    padding: 8px 15px;
+    border-radius: 20px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: background 0.2s;
+}
+
+.insta-link:hover {
+    background: #3a3a3a;
+}
+
+/* ==========================================================================
+   8. OTTIMIZZAZIONE SMARTPHONE (DISATTIVA SFOGLIO + SCROLL VERTICALE)
+   ========================================================================== */
 @media (max-width: 768px) {
+    .control-bar {
+        top: 5px;
+        padding: 5px;
+        gap: 5px;
+        width: 95%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .control-bar button {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+    
+    .container {
+        width: 100vw !important;
+        height: 85vh !important;
+        margin-top: 60px !important;
+        padding: 0 !important;
+    }
+    
+    /* Configurazione per trasformare l'album in una galleria verticale a scorrimento liscio */
     .mobile-scroll-view {
         display: flex !important;
         flex-direction: column !important;
         overflow-y: auto !important;
         overflow-x: hidden !important;
-        width: 100vw !important;
-        height: 85vh !important;
+        width: 100% !important;
+        height: 100% !important;
         position: relative !important;
     }
     
+    /* Gestione delle singole pagine all'interno del flusso verticale mobile */
     .mobile-scroll-view .page {
         display: block !important;
         position: relative !important;
         width: 100vw !important;
         height: auto !important;
         min-height: 60vh !important;
-        margin-bottom: 25px !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        margin-bottom: 30px !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+        background-color: #1a1a1a !important;
     }
     
+    .photo-overlay-controls {
+        bottom: 15px;
+        width: 85%;
+        justify-content: center;
+        gap: 6px;
+        padding: 6px 10px;
+    }
+    
+    .photo-overlay-controls button {
+        font-size: 11px;
+        padding: 5px 10px;
+    }
+
+    .credits-box {
+        max-width: 240px;
+        gap: 8px;
+    }
+
     .desktop-only {
         display: none !important;
     }
