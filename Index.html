@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Festival dei colori Castelforte 2026</title>
+    <link rel="stylesheet" href="stile.css">
+</head>
+<body>
+
+    <div id="splash-screen">
+        <div class="splash-content">
+            <h1>Festival dei colori</h1>
+            <h2>Castelforte 2026</h2>
+            <p>Clicca sotto per iniziare l'esperienza a schermo intero</p>
+            <button onclick="iniziaAlbum()" class="start-btn">📖 INIZIA</button>
+        </div>
+    </div>
+
+    <div class="control-bar" id="ui-bar" style="display: none;">
+        <button onclick="vaiAllaPrimaPagina()">⏮️ Prima Pagina</button>
+        <button id="fullscreen-btn" onclick="toggleFullScreen()">📺 Schermo Intero</button>
+        <button id="view-print-btn" onclick="mostraFinestraLista()">📋 Lista Stampa (<span id="print-count">0</span>)</button>
+        <button id="download-btn" onclick="scaricaFotoCorrente()">📥 Scarica Foto</button>
+        <button onclick="vaiAllUltimaPagina()">⏭️ Ultima Pagina</button>
+    </div>
+
+    <div id="print-list-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="chiudiFinestraLista()">&times;</span>
+            <h3>📋 Foto Selezionate per la Stampa</h3>
+            <textarea id="print-list-textarea" readonly></textarea>
+            <div class="modal-actions">
+                <button onclick="scaricaFileTestoLista()" class="action-btn-download">💾 Scarica .txt</button>
+                <button onclick="svuotaListaStampa()" class="action-btn-clear">🗑️ Svuota</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="album-container" style="display: none;">
+        <div id="album" class="flip-book">
+            
+            <div class="page page-cover" data-density="hard" style="background-image: url('foto/00020 .jpg');">
+                <div class="page-content-overlay">
+                    <h2>Festival dei Colori 2026</h2>
+                    <p>Fai click per iniziare</p>
+                    <small style="opacity: 0.8; margin-top: 15px; display: block;">Puoi usare le frecce ◄ ► della tastiera</small>
+                </div>
+            </div>
+
+            <div class="page page-cover" data-density="hard">
+                <div class="page-content-overlay bg-credits">
+                    <h2>FINE</h2>
+                    <div class="credits-box">
+                        <p class="credits-title">Contatti</p>
+                        <p class="credits-name"></p>
+                        <hr class="credits-divider">
+                        <p class="credits-text"></p>
+                        <a href="mailto:fabio.cappuccio6@gmail.com" class="credits-email">📧 fabio.cappuccio6@gmail.com</a>
+                        
+                        <div class="instagram-box">
+                            <p class="social-title">Seguici su Instagram:</p>
+                            <a href="https://www.instagram.com/fabio_cappuccio" target="_blank" class="insta-link">📸 @fabio_cappuccio</a>
+                            <a href="https://www.instagram.com/gra_ian" target="_blank" class="insta-link">📸 @gra_ian</a>
+                            <a href="https://www.instagram.com/fgfotografia2018" target="_blank" class="insta-link">📸 @fgfotografia2018</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="page-flip.js"></script>
+    
+    <script>
+        let pageFlip;
+        let fotoCorrente = "";
+        let indiceCorrente = 0;
+        
+        const totaleFoto = 243; 
+
+        let preferiti = JSON.parse(localStorage.getItem('album_preferiti')) || [];
+        let listaStampa = JSON.parse(localStorage.getItem('album_stampa')) || [];
+
+        function iniziaAlbum() {
+            document.getElementById('splash-screen').style.display = 'none';
+            document.getElementById('album-container').style.display = 'flex';
+            document.getElementById('ui-bar').style.display = 'flex';
+            
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) { elem.requestFullscreen(); }
+            else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
+            
+            caricaPagine();
+        }
+
+        function caricaPagine() {
+            const album = document.getElementById('album');
+            const retroCopertina = album.lastElementChild; 
+            
+            for (let i = 1; i <= totaleFoto; i++) {
+                const pageDiv = document.createElement('div');
+                pageDiv.className = 'page';
+                
+                const zoomWrapper = document.createElement('div');
+                zoomWrapper.className = 'zoom-wrapper';
+                
+                const img = document.createElement('img');
+                const num = String(i).padStart(5, '0');
+                const nomeFile = `${num} .jpg`;
+                
+                img.src = `foto/${nomeFile}`; 
+                img.className = 'zoomable-img';
+                
+                img.onerror = function() {
+                    if (!this.src.endsWith('.JPG')) { this.src = `foto/${num} .JPG`; }
+                };
+
+                // Controlli rapidi sovrapposti alla foto
+                const overlayBtns = document.createElement('div');
+                overlayBtns.className = 'photo-overlay-controls';
+                
+                const btnFav = document.createElement('button');
+                btnFav.innerHTML = preferiti.includes(num) ? '❤️' : '🤍';
+                btnFav.onclick = (e) => { e.stopPropagation(); togglePreferito(num, btnFav); };
+                
+                const btnPrint = document.createElement('button');
+                btnPrint.innerHTML = listaStampa.includes(nomeFile) ? '✨ Stampa' : '🖨️ Stampa';
+                if(listaStampa.includes(nomeFile)) btnPrint.classList.add('active');
+                btnPrint.onclick = (e) => { e.stopPropagation(); toggleStampa(nomeFile, btnPrint); };
+
+                const btnDL = document.createElement('button');
+                btnDL.innerHTML = '📥 Scarica';
+                btnDL.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    window.open(`foto/${nomeFile}`, '_blank'); 
+                };
+
+                overlayBtns.appendChild(btnFav);
+                overlayBtns.appendChild(btnPrint);
+                overlayBtns.appendChild(btnDL);
+                
+                zoomWrapper.appendChild(img);
+                zoomWrapper.appendChild(overlayBtns);
+                pageDiv.appendChild(zoomWrapper);
+                album.insertBefore(pageDiv, retroCopertina);
+            }
+
+            pageFlip = new St.PageFlip(album, {
+                width: 650, height: 866, size: "stretch",
+                minWidth: 400, maxWidth: 2560, minHeight: 530, maxHeight: 1440,
+                drawShadow: true, showCover: true, usePortrait: false
+            });
+            pageFlip.loadFromHTML(document.querySelectorAll('.page'));
+            
+            pageFlip.on('flip', (e) => {
+                indiceCorrente = e.data;
+                const num = String(e.data).padStart(5, '0');
+                fotoCorrente = `${num} .jpg`;
+            });
+            
+            document.addEventListener('keydown', function(event) {
+                if (!pageFlip) return;
+                if (event.key === 'ArrowRight' || event.key === 'Right') {
+                    pageFlip.flipNext();
+                } else if (event.key === 'ArrowLeft' || event.key === 'Left') {
+                    pageFlip.flipPrev();
+                }
+            });
+
+            document.addEventListener('fullscreenchange', aggiornaTestoBottoneFullscreen);
+            document.addEventListener('webkitfullscreenchange', aggiornaTestoBottoneFullscreen);
+
+            aggiornaContatoreStampa();
+        }
+
+        function togglePreferito(num, btn) {
+            const index = preferiti.indexOf(num);
+            if (index > -1) { preferiti.splice(index, 1); btn.innerHTML = '🤍'; } 
+            else { preferiti.push(num); btn.innerHTML = '❤️'; }
+            localStorage.setItem('album_preferiti', JSON.stringify(preferiti));
+        }
+
+        function toggleStampa(nome, btn) {
+            const index = listaStampa.indexOf(nome);
+            if (index > -1) { 
+                listaStampa.splice(index, 1); 
+                btn.innerHTML = '🖨️ Stampa'; 
+                btn.classList.remove('active');
+            } else { 
+                listaStampa.push(nome); 
+                btn.innerHTML = '✨ Stampa'; 
+                btn.classList.add('active');
+            }
+            localStorage.setItem('album_stampa', JSON.stringify(listaStampa));
+            aggiornaContatoreStampa();
+        }
+
+        function aggiornaContatoreStampa() {
+            document.getElementById('print-count').textContent = listaStampa.length;
+        }
+
+        function mostraFinestraLista() {
+            document.getElementById('print-list-textarea').value = listaStampa.sort().join("\n");
+            document.getElementById('print-list-modal').style.display = "block";
+        }
+
+        function chiudiFinestraLista() { document.getElementById('print-list-modal').style.display = "none"; }
+
+        function scaricaFileTestoLista() {
+            const blob = new Blob([listaStampa.sort().join("\r\n")], { type: "text/plain" });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = "lista_stampa.txt";
+            link.click();
+        }
+
+        function svuotaListaStampa() {
+            if(confirm("Svuotare tutto?")) {
+                listaStampa = [];
+                localStorage.setItem('album_stampa', "[]");
+                aggiornaContatoreStampa();
+                chiudiFinestraLista();
+                location.reload(); 
+            }
+        }
+
+        function scaricaFotoCorrente() {
+            if (indiceCorrente > 0 && indiceCorrente <= totaleFoto) {
+                window.open(`foto/${fotoCorrente}`, '_blank');
+            }
+        }
+
+        function toggleFullScreen() {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                const elem = document.documentElement;
+                if (elem.requestFullscreen) { elem.requestFullscreen(); }
+                else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
+            } else {
+                if (document.exitFullscreen) { document.exitFullscreen(); }
+                else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+            }
+        }
+
+        function aggiornaTestoBottoneFullscreen() {
+            const btn = document.getElementById("fullscreen-btn");
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
+                btn.textContent = "📺 Esci Schermo Intero";
+            } else {
+                btn.textContent = "📺 Schermo Intero";
+            }
+        }
+
+        function vaiAllaPrimaPagina() {
+            if (pageFlip) { pageFlip.turnToPage(0); }
+        }
+
+        function vaiAllUltimaPagina() {
+            if (pageFlip) { pageFlip.turnToPage(totaleFoto + 1); }
+        }
+    </script>
+</body>
+</html>
