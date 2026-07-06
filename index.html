@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Festival dei Colori 2026</title>
-    <link rel="stylesheet" href="stile.css?v=1.1">
+    <link rel="stylesheet" href="stile.css?v=1.2">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 
 <body>
@@ -23,7 +24,7 @@
         <button onclick="vaiAllaPrimaPagina()">⏮️ Prima Pagina</button>
         <button id="fullscreen-btn" onclick="toggleFullScreen()">📺 Schermo Intero</button>
         <button id="view-print-btn" onclick="mostraFinestraLista()">📋 Lista Stampa (<span id="print-count">0</span>)</button>
-        <button id="download-btn" onclick="scaricaFotoCorrente()">📥 Scarica Foto</button>
+        <button id="download-btn" onclick="scaricaTuttoZip()">📥 Scarica Tutto (.ZIP) <span id="zip-progress"></span></button>
         <button onclick="vaiAllUltimaPagina()">⏭️ Ultima Pagina</button>
     </div>
 
@@ -150,17 +151,17 @@
             }
 
             pageFlip = new St.PageFlip(album, {
-    width: 650, 
-    height: 866, 
-    size: "stretch", // Forza il ridimensionamento della pagina
-    minWidth: 200, 
-    maxWidth: 3000, 
-    minHeight: 300, 
-    maxHeight: 4000,
-    drawShadow: true, 
-    showCover: true, 
-    usePortrait: true // Mostra una sola pagina in verticale sul telefono
-});
+                width: 650, 
+                height: 866, 
+                size: "stretch", 
+                minWidth: 200, 
+                maxWidth: 3000, 
+                minHeight: 300, 
+                maxHeight: 4000,
+                drawShadow: true, 
+                showCover: true, 
+                usePortrait: true 
+            });
             
             pageFlip.loadFromHTML(document.querySelectorAll('.page'));
             
@@ -236,10 +237,56 @@
             }
         }
 
-        function scaricaFotoCorrente() {
-            if (indiceCorrente > 0 && indiceCorrente <= totaleFoto) {
-                window.open(`foto/${fotoCorrente}`, '_blank');
+        // Funzione asincrona aggiornata per scaricare l'intera cartella in formato ZIP
+        async function scaricaTuttoZip() {
+            const btn = document.getElementById('download-btn');
+            const progressSpan = document.getElementById('zip-progress');
+            
+            if (btn.disabled) return;
+            
+            btn.disabled = true;
+            btn.style.opacity = "0.6";
+            
+            const zip = new JSZip();
+            const cartellaFoto = zip.folder("foto");
+            
+            for (let i = 1; i <= totaleFoto; i++) {
+                const num = String(i).padStart(5, '0');
+                const nomeFile = `${num} .jpg`;
+                const url = `foto/${nomeFile}`;
+                
+                progressSpan.textContent = `(${Math.round((i / totaleFoto) * 100)}%)`;
+                
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error();
+                    const blob = await response.blob();
+                    cartellaFoto.file(nomeFile, blob);
+                } catch (err) {
+                    try {
+                        const responseMaj = await fetch(`foto/${num} .JPG`);
+                        if (responseMaj.ok) {
+                            const blobMaj = await responseMaj.blob();
+                            cartellaFoto.file(`${num} .JPG`, blobMaj);
+                        }
+                    } catch (e) {
+                        console.log(`Impossibile includere la foto: ${nomeFile}`);
+                    }
+                }
             }
+            
+            progressSpan.textContent = " (Compressione...)";
+            
+            zip.generateAsync({ type: "blob" }).then(function (content) {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = "festival-dei-colori-2026.zip";
+                link.click();
+                
+                btn.disabled = false;
+                btn.style.opacity = "1";
+                progressSpan.textContent = "";
+            });
         }
 
         function toggleFullScreen() {
@@ -271,4 +318,5 @@
         }
     </script>
 </body>
+
 </html>
