@@ -5,8 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Festival dei Colori 2026</title>
-    <link rel="stylesheet" href="stile.css?v=1.3">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link rel="stylesheet" href="stile.css?v=1.6">
 </head>
 
 <body>
@@ -24,15 +23,29 @@
         <button onclick="vaiAllaPrimaPagina()" class="nav-btn">⏮️ Prima Pagina</button>
         <button id="fullscreen-btn" onclick="toggleFullScreen()">📺 Schermo Intero</button>
         
-        <button id="download-btn" onclick="scaricaTuttoZip()">📋 Scarica Tutto (.ZIP) <span id="zip-progress"></span></button>
+        <button id="view-print-btn" onclick="mostraFinestraLista()">📋 Lista Stampa (<span id="print-count">0</span>)</button>
+        
+        <button id="download-btn" onclick="scaricaTuttoZip()">📥 Scarica Tutto (.ZIP)</button>
         
         <button onclick="vaiAllUltimaPagina()" class="nav-btn">⏭️ Ultima Pagina</button>
+    </div>
+
+    <div id="print-list-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="chiudiFinestraLista()">&times;</span>
+            <h3>📋 Foto Selezionate per la Stampa</h3>
+            <textarea id="print-list-textarea" readonly></textarea>
+            <div class="modal-actions">
+                <button onclick="scaricaFileTestoLista()" class="action-btn-download">💾 Scarica .txt</button>
+                <button onclick="svuotaListaStampa()" class="action-btn-clear">🗑️ Svuota</button>
+            </div>
+        </div>
     </div>
 
     <div class="container" id="album-container" style="display: none;">
         <div id="album" class="flip-book">
             
-            <div class="page page-cover" data-density="hard" style="background-image: url('foto/00020 .jpg');">
+            <div class="page page-cover" data-density="hard" style="background-image: url('foto_low/00020 .jpg');">
                 <div class="page-content-overlay">
                     <h2>Festival dei Colori 2026</h2>
                     <p class="desktop-only">Fai click per iniziare</p>
@@ -64,11 +77,10 @@
     
     <script>
         let pageFlip;
-        const totaleFoto = 246; 
+        const totaleFoto = 243; 
         let preferiti = JSON.parse(localStorage.getItem('album_preferiti')) || [];
         let listaStampa = JSON.parse(localStorage.getItem('album_stampa')) || [];
         
-        // Rileva se l'utente sta usando uno smartphone o tablet
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         function iniziaAlbum() {
@@ -76,7 +88,6 @@
             document.getElementById('album-container').style.display = 'flex';
             document.getElementById('ui-bar').style.display = 'flex';
             
-            // Richiede lo schermo intero solo su desktop per non buggare la visualizzazione mobile
             if(!isMobile) {
                 const elem = document.documentElement;
                 if (elem.requestFullscreen) { elem.requestFullscreen(); }
@@ -101,12 +112,13 @@
                 const num = String(i).padStart(5, '0');
                 const nomeFile = `${num} .jpg`;
                 
-                img.src = `foto/${nomeFile}`; 
+                // Ora il sito legge le foto dalla cartella leggera "foto_low"
+                img.src = `foto_low/${nomeFile}`; 
                 img.className = 'zoomable-img';
-                img.loading = "lazy"; // Ottimizza il caricamento mobile
+                img.loading = "lazy"; 
                 
                 img.onerror = function() {
-                    if (!this.src.endsWith('.JPG')) { this.src = `foto/${num} .JPG`; }
+                    if (!this.src.endsWith('.JPG')) { this.src = `foto_low/${num} .JPG`; }
                 };
 
                 const overlayBtns = document.createElement('div');
@@ -125,7 +137,7 @@
                 btnDL.innerHTML = '📥 Scarica';
                 btnDL.onclick = (e) => { 
                     e.stopPropagation(); 
-                    window.open(`foto/${nomeFile}`, '_blank'); 
+                    window.open(`foto_low/${nomeFile}`, '_blank'); 
                 };
 
                 overlayBtns.appendChild(btnFav);
@@ -138,7 +150,6 @@
                 album.insertBefore(pageDiv, retroCopertina);
             }
 
-            // INIZIALIZZAZIONE LIBRERIA SOLO SU DESKTOP
             if (!isMobile) {
                 pageFlip = new St.PageFlip(album, {
                     width: 650, 
@@ -159,14 +170,14 @@
                     else if (event.key === 'ArrowLeft' || event.key === 'Left') { pageFlip.flipPrev(); }
                 });
             } else {
-                // Se è mobile aggiungiamo una classe per gestire lo scorrimento liscio verticale
                 album.classList.add('mobile-scroll-view');
-                // Nascondiamo i bottoni di navigazione pagine inutili su mobile
                 document.querySelectorAll('.nav-btn').forEach(b => b.style.display = 'none');
             }
 
             document.addEventListener('fullscreenchange', aggiornaTestoBottoneFullscreen);
             document.addEventListener('webkitfullscreenchange', aggiornaTestoBottoneFullscreen);
+
+            aggiornaContatoreStampa();
         }
 
         function togglePreferito(num, btn) {
@@ -188,57 +199,43 @@
                 btn.classList.add('active');
             }
             localStorage.setItem('album_stampa', JSON.stringify(listaStampa));
+            aggiornaContatoreStampa();
         }
 
-        async function scaricaTuttoZip() {
-            const btn = document.getElementById('download-btn');
-            const progressSpan = document.getElementById('zip-progress');
-            
-            if (btn.disabled) return;
-            
-            btn.disabled = true;
-            btn.style.opacity = "0.6";
-            
-            const zip = new JSZip();
-            const cartellaFoto = zip.folder("foto");
-            
-            for (let i = 1; i <= totaleFoto; i++) {
-                const num = String(i).padStart(5, '0');
-                const nomeFile = `${num} .jpg`;
-                const url = `foto/${nomeFile}`;
-                
-                progressSpan.textContent = `(${Math.round((i / totaleFoto) * 100)}%)`;
-                
-                try {
-                    const response = await fetch(url);
-                    if (!response.ok) throw new Error();
-                    const blob = await response.blob();
-                    cartellaFoto.file(nomeFile, blob);
-                } catch (err) {
-                    try {
-                        const responseMaj = await fetch(`foto/${num} .JPG`);
-                        if (responseMaj.ok) {
-                            const blobMaj = await responseMaj.blob();
-                            cartellaFoto.file(`${num} .JPG`, blobMaj);
-                        }
-                    } catch (e) {
-                        console.log(`Impossibile scaricare la foto: ${nomeFile}`);
-                    }
-                }
+        function aggiornaContatoreStampa() {
+            const el = document.getElementById('print-count');
+            if(el) el.textContent = listaStampa.length;
+        }
+
+        function mostraFinestraLista() {
+            document.getElementById('print-list-textarea').value = listaStampa.sort().join("\n");
+            document.getElementById('print-list-modal').style.display = "block";
+        }
+
+        function chiudiFinestraLista() { document.getElementById('print-list-modal').style.display = "none"; }
+
+        function scaricaFileTestoLista() {
+            const blob = new Blob([listaStampa.sort().join("\r\n")], { type: "text/plain" });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = "lista_stampa.txt";
+            link.click();
+        }
+
+        function svuotaListaStampa() {
+            if(confirm("Svuotare tutto?")) {
+                listaStampa = [];
+                localStorage.setItem('album_stampa', "[]");
+                aggiornaContatoreStampa();
+                chiudiFinestraLista();
+                location.reload(); 
             }
-            
-            progressSpan.textContent = " (Archiviazione...)";
-            
-            zip.generateAsync({ type: "blob" }).then(function (content) {
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(content);
-                link.download = "festival-dei-colori-2026.zip";
-                link.click();
-                
-                btn.disabled = false;
-                btn.style.opacity = "1";
-                progressSpan.textContent = "";
-            });
+        }
+
+        // NUOVA FUNZIONE IBRIDA: Scarica istantaneamente lo ZIP ad alta risoluzione caricato su Drive
+        function scaricaTuttoZip() {
+            const urlCloud = "https://drive.google.com/drive/folders/1OFAk5D_2kW6RmA7ggKD30Wa6zPwRBX5i?usp=sharing";
+            window.open(urlCloud, '_blank');
         }
 
         function toggleFullScreen() {
