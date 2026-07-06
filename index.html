@@ -148,10 +148,18 @@
             }
 
             pageFlip = new St.PageFlip(album, {
-                width: 650, height: 866, size: "stretch",
-                minWidth: 400, maxWidth: 2560, minHeight: 530, maxHeight: 1440,
-                drawShadow: true, showCover: true, usePortrait: true
-            });
+    width: 650, 
+    height: 866, 
+    size: "stretch", // Forza il ridimensionamento della pagina
+    minWidth: 200, 
+    maxWidth: 3000, 
+    minHeight: 300, 
+    maxHeight: 4000,
+    drawShadow: true, 
+    showCover: true, 
+    usePortrait: true // Mostra una sola pagina in verticale sul telefono
+});
+            
             pageFlip.loadFromHTML(document.querySelectorAll('.page'));
             
             pageFlip.on('flip', (e) => {
